@@ -35,7 +35,7 @@ pipeline {
                  sh "sed -i "s#replace#sushil1234/sushil-kodekloud-devsecops-repo:${GIT_COMMIT}#g" k8s_deployment_service.yaml"
                  sh "kubectl apply -f k8s_deployment_service.yaml"
          }
-            }
+      }
     }
     //   stage('K8S Deployment - DEV') {
     //     steps {
