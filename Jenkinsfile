@@ -18,6 +18,15 @@ pipeline {
                 jacoco execPattern: 'target/jacoco.exec'  // Jacoco 
               }
             }
-        }    
+        }
+         stage('Docker Build and Push') {
+            steps {
+              withDockerRegistry([credentialsId: "Docker-Hub", url: ""]) {
+                sh 'printenv'
+                sh 'sudo docker build -t sushil1234/sushil-kodekloud-devsecops-repo:""$GIT_COMMIT"" .'
+                sh 'docker push sushil1234/sushil-kodekloud-devsecops-repo:""$GIT_COMMIT""'
+                }
+            }
+    }    
     }
 }
