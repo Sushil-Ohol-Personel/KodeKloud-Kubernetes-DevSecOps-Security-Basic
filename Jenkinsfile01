@@ -1,0 +1,37 @@
+// NOTES :
+// 1. Copy the kubeconfig file from kubernetes cluster, which is present on the following path:
+//      /root/.kube/config
+// 2. Create a Kubeconfig file on your local machine and copy the content from above file into the kubeconfig file.
+// 3. We need to use this file to let Jenkins aurthorize to make calls to our Kubernetes cluster.
+// 4. Go to Manage Jenkins -> Manage Credentials -> System ->Global credentials. 
+// 5. Add Credentials as a Secret file and upload the local kubeconfig created.
+// 6. Use this credentials in the jenkins pipeline or Jenkins file as shown below.
+
+pipeline {
+  agent any
+
+  stages {
+      stage('Git Version') {
+            steps {
+              sh "git version"
+             }
+        } 
+      stage('Maven Version') {
+            steps {
+              sh "git version"
+             }
+        }
+      stage('Docker Version') {
+            steps {
+              sh "docker -v"
+             }
+        } 
+      stage('Kubernetes Version') {
+            steps {
+                withKubeConfig([credentialsId: 'kubeconfig' ]){
+                sh "kubectl version"
+               }
+            }
+        }  
+    }
+}
