@@ -23,10 +23,10 @@ pipeline {
             steps {
               withDockerRegistry([credentialsId: "docker-hub", url: ""]) {
                 sh 'printenv'
-                sh 'sudo docker build -t sushil1234/sushil-kodekloud-devsecops-repo:""$GIT_COMMIT"" .'
+                sh 'docker build -t sushil1234/sushil-kodekloud-devsecops-repo:""$GIT_COMMIT"" .'
                 sh 'docker push sushil1234/sushil-kodekloud-devsecops-repo:""$GIT_COMMIT""'
                 }
             }
-    }    
-    }
+    } 
+  }
 }
