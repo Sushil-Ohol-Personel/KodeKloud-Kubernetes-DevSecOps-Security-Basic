@@ -1,0 +1,181 @@
+1 / 11
+Install the trivy vulnerability scanner on controlplane host.
+
+You can install the required package using apt-get
+
+#Add the trivy-repo
+sudo apt-get update
+sudo apt-get -y install wget apt-transport-https gnupg lsb-release
+wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+
+#Update Repo and Install trivy
+sudo apt-get update
+sudo apt-get install trivy -y
+
+trivy version
+Version: 0.62.1
+
+*********************************************************************************************
+
+2 / 11
+Which of the following commands can be used to scan container images using trivy?
+
+Run trivy --help and checkout the image sub-command.
+
+trivy image command can be used to scan container images using trivy.
+
+You can take help from following mentioned URL:
+
+https://aquasecurity.github.io/trivy/v0.52/docs/target/container_image/
+
+*********************************************************************************************
+
+3 / 11
+Which of the following artifacts can not be scanned by trivy for security vulnerabilities?
+
+Use trivy --help and look for all the available options.
+
+Trivy can scan images, filesystem and even git repos but it cannot scan the network
+
+*********************************************************************************************
+
+4 / 11
+Which of the following commands can be used to scan container images severity using trivy?
+
+Use trivy --help and look for all the available options.
+
+trivy image --severity command can be used to scan container images severity using trivy.
+
+*********************************************************************************************
+
+5 / 11
+Which of the following commands can be used to skip latest informations about CVEs using trivy?
+
+trivy image --skip-update command can be used to skip latest informations about CVEs using trivy.
+
+*********************************************************************************************
+7/ 11
+We have a script called trivy-docker-image-scan.sh that can be used to run a 
+vulnerability scan on the base docker image that we are using in the Dockerfile for our 
+project. Execute this script from kubernetes-devops-security directory.
+
+How many vulnerabilities it found with critical severity?
+
+---
+
+Execute trivy-docker-image-scan.sh script to identify the exact answer:
+
+cd /root/kubernetes-devops-security
+bash trivy-docker-image-scan.sh
+
+*********************************************************************************************
+
+8 / 11
+How many vulnerabilities were detected with the severity of high?
+
+Execute trivy-docker-image-scan.sh script to identify the exact answer:
+
+cd /root/kubernetes-devops-security
+bash trivy-docker-image-scan.sh
+
+*********************************************************************************************
+
+9 / 11
+So far you have executed the trivy-docker-image-scan.sh script manually. However, we want to 
+run it as a part of the pipeline.
+
+We are running the dependency check in the Vulnerability Scan - Docker stage of our pipeline.
+
+Update this stage and add a step to run the Trivy scan script. 
+You can run these steps in parallel since these are independent of each other.
+
+---
+
+Open Jenkinsfile in VsCode and make the necessary changes so that the Vulnerability Scan - 
+Docker pipeline stage looks like as below.
+
+stage('Vulnerability Scan - Docker') {
+      steps {
+        parallel(
+          "Dependency Scan": {
+            sh "mvn dependency-check:check"
+          },
+          "Trivy Scan": {
+            sh "bash trivy-docker-image-scan.sh"
+          }
+        )
+      }
+    }
+
+Remember to push your changes to the origin.
+
+*********************************************************************************************
+
+10 / 11
+You might have noticed that Trivy found couple of vulnerabilities and yet, 
+the Jenkins job passed.
+
+Modify the /root/kubernetes-devops-security/trivy-docker-image-scan.sh script and 
+make sure Jenkins job fails if Trivy finds any vulnerability with the severity of critical.
+
+Also, it must throw the error message:
+Image scanning failed. Vulnerabilities found
+
+If NO critical vulerabilities are detected, it should display a success message:
+Image scanning passed. No CRITICAL vulnerabilities found
+
+The Jenkins build must fail due to Trivy scan results.
+
+---
+
+Make the necessary changes in /root/kubernetes-devops-security/trivy-docker-image-scan.sh script, the final script would look something like as below:
+
+#!/bin/bash
+
+dockerImageName=$(awk 'NR==1 {print $2}' Dockerfile)
+echo $dockerImageName
+
+docker run --rm -v /tmp/.cache:/root/.cache/ aquasec/trivy:0.17.2 -q image --exit-code 0 --severity HIGH --light $dockerImageName
+docker run --rm -v /tmp/.cache:/root/.cache/ aquasec/trivy:0.17.2 -q image --exit-code 1 --severity CRITICAL --light $dockerImageName
+
+    # Trivy scan result processing
+    exit_code=$?
+    echo "Exit Code : $exit_code"
+
+    # Check scan results
+    if [[ "${exit_code}" == 1 ]]; then
+        echo "Image scanning failed. Vulnerabilities found"
+        exit 1;
+    else
+        echo "Image scanning passed. No CRITICAL vulnerabilities found"
+    fi;
+
+Make sure to push your changes to the origin repository.
+
+*********************************************************************************************
+
+11 / 11
+As per Trivy scan results, we found that there are serveral vulnerabilities in our base 
+docker image.
+
+Let's update the base docker Image to 
+public.ecr.aws/docker/library/openjdk:21-ea-17-oraclelinux7.
+
+The Jenkins build must pass after making this change.
+
+---
+
+Make the necessary changes in /root/kubernetes-devops-security/Dockerfile as below:
+
+Change
+
+FROM public.ecr.aws/docker/library/openjdk:17-jdk-alpine
+
+to
+
+FROM public.ecr.aws/docker/library/openjdk:21-ea-17-oraclelinux7
+
+Make sure to push your changes to the origin repository.
+
+*********************************************************************************************
