@@ -1,0 +1,151 @@
+2 / 8
+If a Junit test fails after the mutation, then we can say that:
+
+If the unit test fails after the mutation, then we can say that 
+Mutation was caught and killed by our Junit test.
+
+*************************************************************************************************************
+
+4 / 8
+There is a pom.xml file under kubernetes-devops-security repository. Update this file as per details mentioned below:
+
+Add PITest Mutation Plugin in this file, below you can find the sample code snippet for the same:
+
+<plugin>
+   <groupId>org.pitest</groupId>
+   <artifactId>pitest-maven</artifactId>
+   <version>1.5.0</version>
+   <dependencies>
+      <dependency>
+         <groupId>org.pitest</groupId>
+         <artifactId>pitest-junit5-plugin</artifactId>
+         <version>0.12</version>
+      </dependency>
+   </dependencies>
+</plugin>
+
+Remember to update the given code snippet so that the build fails if the output (Mutation Threshold) is less than 75%
+
+Update the given code snippet to make sure plugin generates the output in HTML and XML format.
+
+Do not make any other changes to the given code snippet.
+
+Remember to push your changes to the origin repository.
+
+Open pom.xml file in VS Code editor and paste the given code snippet under <!--                   PITest Mutation Plugin                   --> line.
+
+Now edit the code snippet to add the Mutation Threshold, and the output format. Finally the plugin code snippet should look like this:
+
+<plugin>
+   <groupId>org.pitest</groupId>
+   <artifactId>pitest-maven</artifactId>
+   <version>1.5.0</version>
+   <dependencies>
+      <dependency>
+         <groupId>org.pitest</groupId>
+         <artifactId>pitest-junit5-plugin</artifactId>
+         <version>0.12</version>
+      </dependency>
+   </dependencies>
+   <configuration>
+      <mutationThreshold>75</mutationThreshold>
+      <outputFormats>
+         <outputFormat>XML</outputFormat>
+         <outputFormat>HTML</outputFormat>
+      </outputFormats>
+   </configuration>
+</plugin>
+
+Remember to push your changes to the origin repository.
+
+***********************************************************************************************
+
+5 / 8
+Try to build the devsecops-numeric-application pipeline job from the Jenkins UI and make sure it is running fine.
+
+If not, then try to fix the issues as needed.
+
+Before hitting the Check button, please make sure that the latest build for devsecops-numeric-application job has passed.
+
+Open the Jenkinsfile in the VS Code editor and change sh 'docker push docker-registry:5000/java-app:lates' to sh 'docker push docker-registry:5000/java-app:latest in the Docker image build and push stage.
+
+Next, in Kubernetes Deployment - DEV stage, change sh "kubectl apply -f k8s_deployment_service.yml" to sh "kubectl apply -f k8s_deployment_service.yaml".
+
+Finally, push the changes to the origin which will trigger that pipeline to build.
+
+*********************************************************************************************
+
+6 / 8
+Modify the existing pipeline and add another stage (preferably under Unit Tests - JUnit and Jacoco stage) to run the Mutation Tests and name it as per your choice. The command to run these tests is: mvn org.pitest:pitest-maven:mutationCoverage.
+
+In this same stage, add a post field that uses the pitmutation plugin to generate the tests report.
+
+Refer the plugin documentation by clicking on the PIT Mutation button on the top bar.
+
+Note: If your pipeline fails because the Mutation score is below the threshold value you have set, then you can click the Check button to validate your work.
+
+Login into the Jenkins UI and install PIT Mutation plugin.
+
+Now add a new stage in Jenkinsfile:
+
+stage('Mutation Tests - PIT') {
+      steps {
+        sh "mvn org.pitest:pitest-maven:mutationCoverage"
+      }
+      post {
+        always {
+          pitmutation mutationStatsFile: '**/target/pit-reports/**/mutations.xml'
+        }
+      }
+    }
+
+Remember to push your changes to the origin repository.
+
+***************************************************************************************
+
+7 / 8
+Look into the recent Jenkins build and check the PIT Mutation Report. 
+Identify the survived mutation tests and improve those tests so that these mutation tests 
+are killed and the build passes.
+
+Open src/test/java/com/devsecops/NumericApplicationTests.java file in VS Code editor and make some changes in the tests, the tests must look like as below:
+
+    @Test
+    public void smallerThanOrEqualToFiftyMessage() throws Exception {
+        this.mockMvc.perform(get("/compare/50")).andDo(print()).andExpect(status().isOk())
+          .andExpect(content().string("Smaller than or equal to 50"));
+    }
+
+    @Test
+    public void greaterThanFiftyMessage() throws Exception {
+        this.mockMvc.perform(get("/compare/51")).andDo(print()).andExpect(status().isOk())
+                .andExpect(content().string("Greater than 50"));
+    }
+
+    @Test
+    public void welcomeMessage() throws Exception {
+         this.mockMvc.perform(get("/")).andDo(print()).andExpect(status().isOk())
+           .andExpect(content().string("Kubernetes DevSecOps"));
+    }
+
+Remember to push your changes to the origin repository.
+
+**************************************************************************************
+
+8 / 8
+For the latest Jenkins build you might have noticed in PIT Mutation Report that there 
+is one code functionality (/increment) which has no coverage so far as we don't have any 
+test for it.
+
+Add a test for /increment functionality and make sure the you don't see NO_COVERAGE for 
+any functionality.
+
+Open src/test/java/com/devsecops/NumericApplicationTests.java file in Vscode editor and add a new test as below (instead of number 50 you can use any number):
+
+    @Test
+    public void incrementByOneMessage() throws Exception {
+         this.mockMvc.perform(get("/increment/50")).andDo(print()).andExpect(status().isOk())
+           .andExpect(content().string("51"));
+    }
+
+Remember to push your changes to the origin repository.
