@@ -1,0 +1,108 @@
+1 / 11
+What is a vulnerability?
+
+Vulnerability is a weakness in a system that can be exploited.
+
+**********************************************************************************************
+
+2 / 11
+If a bug is determined as a vulnerability, then where would it be registered in a 
+vulnerability scan?
+
+If a bug is determined as a vulnerability in the vulnerability scan then it is 
+registered in National Vulnerability Database.
+
+**********************************************************************************************
+
+3 / 11
+Can dependency check identify the vulnerabilities associated with the 
+open-source dependencies?
+
+Yes, dependency check can identify the vulnerabilities associated with the open-source 
+dependencies.
+
+**********************************************************************************************
+
+4 / 11
+What does OWASP stands for?
+
+OWASP stands for Open Web Application Security Project.
+
+**********************************************************************************************
+
+5 / 11
+Can dependency check update itself in the the NVE database?
+
+When we run the dependency check for the first time then it updates itself with the 
+NVE database to make sure the reports reflect the most recent information.
+
+**********************************************************************************************
+
+8 / 11
+Add a stage (preferably under Mutation Tests - PIT stage) to run the Vulnerability Tests using dependency-check plugin and name it as per your choice.
+
+In this same stage, add a post field to utilise the owasp-dependency-check plugin to generate the tests report.
+
+The job might fail but you can ignore that for now.
+
+------
+
+Add the following stage just below Mutation Tests - PIT stage in Jenkinsfile:
+
+stage('Vulnerability Scan - Docker ') {
+      steps {
+        sh "mvn dependency-check:check"
+      }
+      post {
+        always {
+          dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
+        }
+      }
+    }
+
+Make sure to push your changes to the origin repository.
+
+**********************************************************************************************
+
+10 / 11
+Let us now work on mitigating some of the vulnerabilities that were detected. 
+Let's update the spring boot release version to 2.3.12.
+
+---
+
+Open the pom.xml file in VS Code editor and change the spring-boot-starter-parent version to 2.3.12.
+
+Update the release version as follows:
+
+<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>2.3.12.RELEASE</version>
+
+Push the changes to the git repository.
+
+**********************************************************************************************
+
+11 / 11
+You must have noticed that there are still a couple of vulnerabilities that have been detected 
+and that the Jenkins job is still failing.
+
+To pass the build, update the failBuildOnCVSS to 45.
+
+Please note that this is just a demo application, so we will not fix all vulnerabilities. 
+You may have to fix as many vulnerabilities as possible in real-world scenarios.
+
+---
+
+Open the pom.xml file in VsCode editor and under Dependency Check Plugin change the failBuildOnCVSS to 45.
+
+<failBuildOnCVSS>45</failBuildOnCVSS>
+
+Push the changes to the git repository.
+
+**********************************************************************************************
+
+
+
+
+
