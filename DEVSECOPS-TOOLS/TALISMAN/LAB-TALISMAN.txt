@@ -1,0 +1,163 @@
+4 / 10
+Next, install talisman as pre-commit hook in kubernetes-devops-security git repository.
+
+curl https://thoughtworks.github.io/talisman/install.sh > /tmp/install-talisman.sh
+chmod +x /tmp/install-talisman.sh
+cd /root/kubernetes-devops-security
+bash /tmp/install-talisman.sh pre-commit
+
+************************************************************************************************
+
+cp /tmp/install-talisman.sh ~/.local/bin
+export PATH=$PATH:$HOME/.local/bin
+printenv PATH
+/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/home/tux/.local/bin
+/usr/lib/code-server/lib/vscode/bin/remote-cli:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/.local/bin
+
+************************************************************************************************************************
+
+5 / 10
+Check if there are any Untracked files present in kubernetes-devops-security repository, you can check the same using below command:
+
+cd /root/kubernetes-devops-security
+git status
+
+If so, try to add and commit these files:
+
+git add .
+git commit -m "your commit message"
+
+Are you able to commit these files?
+
+Follow below steps:
+
+cd /root/kubernetes-devops-security
+git status
+git add .
+git commit -m "your commit message"
+
+You won't be able to commit as there is some sensitive data which Talisman must have detected.
+
+*******************************************************************************************************************************
+
+Which of the following files are detected by Talisman in the pre-commit scan?
+
+
+A. access and sample.txt
+
+
+B. sample.txt and info.txt
+
+
+C. info.txt and access
+
+
+D. robot.txt and sample.txt
+
++-----------------+------------------------------------------------------+----------+
+| public/access   | Expected file to not contain                         | high     |
+|                 | base64 encoded texts such as:                        |          |
+|                 | base64encodedsecret=cGFzc3dvcmQtaXMtcXdlcnR5MTI...   |          |
++-----------------+------------------------------------------------------+----------+
+| public/access   | Potential secret pattern :                           | low      |
+|                 | base64encodedsecret=cGFzc3dvcmQtaXMtcXdlcnR5MTIzCg== |          |
+|                 |                                                      |          |
++-----------------+------------------------------------------------------+----------+
+| public/access   | Potential secret pattern :                           | low      |
+|                 | aws_access_key_id=VYEN23LCJGLTDPMSWQAL               |          |
+|                 |                                                      |          |
++-----------------+------------------------------------------------------+----------+
+| public/access   | Potential secret pattern :                           | high     |
+|                 | aws_access_key_id=                                   |          |
++-----------------+------------------------------------------------------+----------+
+| public/info.txt | Potential secret pattern :                           | low      |
+|                 | apikey=AizaSyCqhjgrPtr_La56sdUkjfav_laCqhjgrPtr_2s   |          |
+|                 |                                                      |          |
++-----------------+------------------------------------------------------+----------+
+
+
+If you are absolutely sure that you want to ignore the above files from talisman detectors, consider pasting the following format in .talismanrc file in the project root
+
+fileignoreconfig:
+- filename: public/access
+  checksum: d1ae8eb1f6393e04794a7b2b2eaf827e7d023465a60a1fbf0306957a8c0f59af
+- filename: public/info.txt
+  checksum: 6243a12e75e189f4e89626324b2234cd4f63c25d3779212145e37c6f1e7a8138
+version: "1.0"
+
+Talisman done in 36.709873ms
+
+*****************************************************************************************************************************************************************
+
+7 / 10
+Remove the high severity files from the repository which are detected by the Talisman scan.
+
+Configure the Talisman so that it ignores the detected files by checksum which are of medium or low severity, finally commit the changes.
+
+Note: Please do not push any changes to the git repository yet.
+
+Remove the high severity file:
+
+cd /root/kubernetes-devops-security
+rm -f public/access
+
+
+
+Create a file called .talismanrc under kubernetes-devops-security repository and add the files name along with checksum to get these ignored by talisman scan. You can get the checksum from the output when you tried to commit your changes. The .talismanrc file content should be something like as below:
+
+
+fileignoreconfig:
+- filename: public/info.txt
+  checksum: b058bbb84595454d550863a6ae7fd501863acd9692ec3cc699bc6f76dd0e38a5
+
+
+Note: Remember to change the checksum as needed.
+
+
+Commit your changes:
+
+
+git add .
+git commit -m "your commit message"
+
+*****************************************************************************************************************************************************************************************
+
+Now install talisman as a pre-push hook in the kubernetes-devops-security repository.
+
+Note: Please do not push any changes to the git repository yet.
+
+Follow below mentioned steps for Talisman pre-push Installation/setup:
+
+
+curl https://thoughtworks.github.io/talisman/install.sh > /tmp/install-talisman.sh
+chmod +x /tmp/install-talisman.sh
+cd /root/kubernetes-devops-security
+bash /tmp/install-talisman.sh
+
+*************************************************************************************************************************************
+
+9 / 10
+Try to push your changes now. Are you able to push the changes ?
+
+No
+
+****************************************************************************************************************************
+
+10 / 10
+Finally, ignore the files from the talisman scan, and push the changes to git repository.
+
+Edit the .talismanrc file.
+
+
+vi .talismanrc
+
+
+
+Add the below changes and push:
+
+- filename: html/.env
+  checksum: b3edd4020e87cd338eb75c4278c46bce4ac5a492e7d6a4f25fe231c04d8dbe4d]
+
+
+Note: Checksum ID might be different so please use the actual one.
+

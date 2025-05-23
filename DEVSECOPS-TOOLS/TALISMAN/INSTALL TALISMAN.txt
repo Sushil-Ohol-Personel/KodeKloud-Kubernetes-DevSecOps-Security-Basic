@@ -1,0 +1,20 @@
+curl https://thoughtworks.github.io/talisman/install.sh > /tmp/install-talisman.sh
+chmod +x /tmp/install-talisman.sh
+cd /root/<REPO_NAME>
+bash /tmp/install-talisman.sh pre-commit
+
+******************************************************************************************************
+
+Now install talisman as a pre-push hook in the kubernetes-devops-security repository.
+
+Note: Please do not push any changes to the git repository yet.
+
+Follow below mentioned steps for Talisman pre-push Installation/setup:
+
+
+curl https://thoughtworks.github.io/talisman/install.sh > /tmp/install-talisman.sh
+chmod +x /tmp/install-talisman.sh
+cd /root/kubernetes-devops-security
+bash /tmp/install-talisman.sh
+
+*******************************************************************************************************************
