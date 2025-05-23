@@ -1,0 +1,220 @@
+1 / 14
+What is OPA?
+
+Open Policy Agent, or OPA, is an open source, general purpose policy engine. 
+OPA decouples policy decisions from other responsibilities of an application, 
+like those commonly referred to as business logic.
+
+**************************************************************************************************
+
+2 / 14
+The OPA conftest can be used to write tests for?
+
+A Terraform code
+
+B Dockerfile
+
+C Kubernetes Configuration
+
+D Python code
+
+---
+OPA conftest can be used to writes tests for Terraform code, Kubernetes configuration, 
+Dockerfile or for any other configs.
+
+**************************************************************************************************
+
+3 / 14
+What language does OPA conftest use to write the policies?
+
+OPA Conftest uses Rego language to write the policies.
+
+**************************************************************************************************
+
+4 / 14
+As per Dockerfile best practices, we should run our container as user root.
+
+As per Dockerfile best practices, we should run our container as a non-root user.
+
+**************************************************************************************************
+
+6 / 14
+Install OPA version 0.65.0 on the controlplane node, also run in the background.
+
+Download installer from https://github.com/open-policy-agent/opa/releases
+
+Execute below given commands to install OPA version 0.38.1:
+
+cd /root/
+curl -L -o opa https://openpolicyagent.org/downloads/v0.65.0/opa_linux_amd64_static
+chmod 755 ./opa
+
+To run in the backgroud, run the command as below:
+
+./opa run -s &
+
+
+**************************************************************************************************
+
+7 / 14
+Install the OPA conftest on controlplane node.
+
+You can take help from https://www.conftest.dev/.
+
+Execute below given steps for OPA conftest installation:
+
+cd /root/
+LATEST_VERSION=$(wget -O - "https://api.github.com/repos/open-policy-agent/conftest/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | cut -c 2-)
+wget "https://github.com/open-policy-agent/conftest/releases/download/v${LATEST_VERSION}/conftest_${LATEST_VERSION}_Linux_x86_64.tar.gz"
+tar xzf conftest_${LATEST_VERSION}_Linux_x86_64.tar.gz
+mv conftest /usr/local/bin
+
+**************************************************************************************************
+
+8 / 14
+For /root/kubernetes-devops-security/Dockerfile run Dockerfile Security Checks using OPA Rego Policies with conftest.
+
+How many tests failed?
+---
+
+Run the Dockerfile Security Checks for /root/kubernetes-devops-security/Dockerfile using OPA Rego Policies with conftest:
+
+conftest test --policy /root/kubernetes-devops-security/opa-docker-security.rego /root/kubernetes-devops-security/Dockerfile
+
+Two tests should fail:
+
+FAIL - /root/kubernetes-devops-security/Dockerfile - main - Line 0: use a trusted base image
+FAIL - /root/kubernetes-devops-security/Dockerfile - main - Line 4: Use COPY instead of ADD
+
+**************************************************************************************************
+
+9 / 14
+Which of the following solutions was provided by OPA conftest for one of the tests failure?
+
+Two tests should fail and the following should be the suggestions:
+
+FAIL - /root/kubernetes-devops-security/Dockerfile - main - Line 0: use a trusted base image
+FAIL - /root/kubernetes-devops-security/Dockerfile - main - Line 4: Use COPY instead of ADD
+
+**************************************************************************************************
+
+10 / 14
+As of now you have run OPA conftest for your Dockerfile manually.
+
+Now, modify the Vulnerability Scan - Docker stage to add OPA Conftest step to test the Dockerfile within your pipeline.
+
+The pipeline should fail as there are two issues with the Dockerfile.
+
+---
+
+Modify the Vulnerability Scan - Docker stage as below:
+
+stage('Vulnerability Scan - Docker') {
+      steps {
+        parallel(
+          "Dependency Scan": {
+            sh "mvn dependency-check:check"
+          },
+          "Trivy Scan": {
+            sh "bash trivy-docker-image-scan.sh"
+          },
+          "OPA Conftest": {
+            sh "/usr/local/bin/conftest test --policy opa-docker-security.rego Dockerfile"
+          }
+        )
+      }
+    }
+
+Make sure to push your changes to the origin repo.
+
+**************************************************************************************************
+
+11 / 14
+As per the suggestions given by OPA conftest fix the Dockerfile, and push your changes.
+
+Make sure the pipeline passes this time.
+
+Note: For now we want to use adoptopenjdk/openjdk8:alpine-slim base docker image so to fix use trusted base image issue, comment the whole # Only use trusted base images
+section in opa-docker-security.rego file. The section would look like:
+
+# Only use trusted base images
+#deny[msg] {
+#    input[i].Cmd == "from"
+#    val := split(input[i].Value[0], "/")
+#    count(val) > 1
+#    msg = sprintf("Line %d: use a trusted base image", [i])
+#}
+---
+Update the Dockerfile and replace ADD with COPY.
+
+Change:
+
+ADD ${JAR_FILE} /home/devsecops/app.jar
+
+To:
+
+COPY ${JAR_FILE} /home/devsecops/app.jar
+
+Make sure to push your changes.
+**************************************************************************************************
+
+12 / 14
+We have defined some policies in opa-k8s-security.rego file to test the k8s_deployment_service.yaml file.
+
+Add a new stage (preferably under Docker Build and Push) to test the k8s template through OPA conftest policies defined in opa-k8s-security.rego. Name the stage as per your choice.
+
+The pipeline might fail but you can ignore that for now.
+
+---
+
+Update the Jenkinsfile to add a new stage just below the Docker Build and Push stage as shown below:
+
+stage('Vulnerability Scan - Kubernetes') {
+      steps {
+        sh '/usr/local/bin/conftest test --policy opa-k8s-security.rego k8s_deployment_service.yaml'
+      }
+    }
+
+Make sure to push your changes.
+
+**************************************************************************************************
+
+13 / 14
+As per the results given by the conftest, fix the k8s template, so that the conftest 
+passes all the policies which are defined in opa-k8s-security.rego file.
+
+The pipeline build must pass now, however the PODs might stuck in pending or error state, 
+we will fix this in the next question.
+
+---
+
+Modify the k8s template as below:
+
+spec:
+  containers:
+  - image: REPLACE_ME
+    name: devsecops-container
+    securityContext:
+      runAsNonRoot: true
+
+Remember to push your changes.
+
+**************************************************************************************************
+
+14 / 14
+Fix the remaining issues in the template now and make sure that the PODs are in running 
+state after the deployment.
+
+---
+
+Modify the k8s template as below:
+
+spec:
+  containers:
+  - image: REPLACE_ME
+    name: devsecops-container
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 999
+
+Remember to push your changes.
