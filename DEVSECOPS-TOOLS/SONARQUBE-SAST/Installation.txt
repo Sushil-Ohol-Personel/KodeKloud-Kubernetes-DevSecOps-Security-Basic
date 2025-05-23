@@ -1,0 +1,54 @@
+SonarQube is installed as a Docker Container on our VM.
+
+To install sonarQube we use the following command :
+
+docker run -d --name soanrqube -e SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true -p 9000:9000 sonarqube:latest
+
+To Check Logs of SonarQube Container:
+
+docker logs sonarqube -f
+
+To check if SonarQube is up and running :
+
+docker ps -a | grep -i sonar
+
+Default Credentials are :
+
+admin
+admin
+
+To add a Project:
+
+Click manually.
+Add Project name
+Generate a Token which can be used in Jenkins Pipeline.
+Select maven based build.
+
+This will give you sample command which can be pasted in your pipeline stage.
+
+To create Custom QUALITY GATES :
+
+On UI, go to Quality Gates section.
+Click Create.
+Select make it as Default Quality gate.
+Add Conditions:
+Code Smells.
+Code Coverage.
+
+To fail build on report of SonarQube we will have to use Quality Gate Plugin.
+
+To add SonarQube webhook:
+On JENKINS SIDE:
+Jenkins -> Manage Jenkins -> Configure System -> SoanrQube Servers -> SonarQube Installation
+-> SonarQube url -> Use the above created token or generate new token.
+On SONARQUBE SIDE:
+Copy Jenkins url.
+Go to Administration on SonarQube UI.
+Click Configuration.
+Click Webhooks.
+Create Webhooks.
+Add Jenkins URL here and add /sonarqube-webhook/
+eg: Jenkins:8080/sonarqube-webhook/
+
+
+

@@ -1,0 +1,308 @@
+1 / 13
+What is SAST?
+
+Static application security testing (SAST), or static analysis, 
+is a testing methodology that analyses source code to find security vulnerabilities 
+that make your organisation’s applications susceptible to attack.
+
+************************************************************************************************
+
+2 / 13
+Can SAST scan an application before the code is compiled?
+
+SAST scans an application before the code is compiled. It’s also known as white box testing.
+
+************************************************************************************************
+
+3 / 13
+What are Quality Gates in SonarQube?
+
+Quality Gates are the set of conditions a project must meet before it should be 
+pushed to further environments. Quality Gates considers all of the quality metrics for a 
+project and assigns a passed or failed designation for that project.
+
+************************************************************************************************
+
+4 / 13
+Is it possible to set a default Quality Gate which will be applied to all projects?
+
+Yes, it is possible to set a default Quality Gate which will be applied to all projects.
+
+************************************************************************************************
+
+6 / 13
+There is a sonarqube.yaml template file under root's home on the controlplane node.
+
+Deploy SonarQube to the Kubernetes cluster using the given template. Once deployed you 
+should be able to access the SonarQube UI using SonarQube button on the top bar.
+
+The default username and password for SonarQube is admin. Set a new password S0narAdm!n 
+for the admin user.
+
+Note: SonarQube can take some time to come up after the deployment, you can check the 
+relevant POD logs to track the same.
+
+Execute below given command to apply the template:
+
+kubectl apply -f /root/sonarqube.yaml
+
+Click on SonarQube button on the top bar to open the SonarQube UI. Enter admin in username and password. It will ask for the password update, enter admin in Old Password* and S0narAdm!n in New Password* and Confirm Password*. Finally click on Update
+
+
+************************************************************************************************
+
+7 / 13
+Manually create a project called devsecops-numeric-application in SonarQube.
+
+Both Project display name and Project key must be devsecops-numeric-application
+
+Login into the SonarQube UI
+
+Select Manually option to create a new project.
+
+Enter devsecops-numeric-application in Project display name and Project key
+
+Click on Set Up
+
+************************************************************************************************
+
+8 / 13
+Now, integrate the SonarQube with Jenkins. To do this, first generate a token from the 
+SonarQube UI (you might need to use Other CI option).
+
+Next, add a new stage (name the stage as per your choice) for SonarQube to run a 
+SonarQube analysis on your project devsecops-numeric-application with maven. 
+You can add this stage under Unit Tests - JUnit and Jacoco stage.
+
+Make sure to push your changes to the git remote and wait for the Jenkins job to complete 
+before hitting the check button.
+
+Login into the SonarQube UI and go to the devsecops-numeric-application project.
+
+Select Other CI option to create a token, this token will be used in the pipeline.
+
+Now, edit Jenkinsfile to add the SonarQube stage under Unit Tests - JUnit and Jacoco stage as below and push the changes to the git repository:
+
+
+    stage('SonarQube - SAST') {
+      steps {
+        sh "mvn sonar:sonar -Dsonar.projectKey=devsecops-numeric-application -Dsonar.host.url=http://controlplane:30012 -Dsonar.login=sqp_3dbae3e8540d4eaaad37746eeab8ca8267bcc6ef"
+      }
+    }
+
+Push your changes:
+
+cd kubernetes-devops-security/
+git add .
+git commit -m "<your commit message>"
+git push origin master
+
+Wait for the Jenkins job to complete before hitting the check button.
+
+
+************************************************************************************************
+
+9 / 13
+Create a custom quality gate called devsecops-custom-qg in SonarQube and add devsecops-numeric-application project under it.
+
+The Code Smells for the overall code must be less than or equal to 10, otherwise said the build must fail if code smells are more than 10.
+
+The Condition Coverage for the overall code must be more than 60, otherwise said the build must fail if condition coverage is less than 60.
+
+Do not make this quality gate as default.
+
+Sonarqube credentials:
+
+user: admin
+
+password: S0narAdm!n
+
+Login into the SonarQube UI using user admin and password S0narAdm!n. Further click on the Quality Gates option.
+
+Then click on Create button.
+
+Fill devsecops-custom-qg in Name and click Save.
+
+Next, click on Add Condition.
+
+Select On Overall Code option and then from the drop down select Code Smells
+
+Enter value 10 for is greater than option and click on Add Condition.
+
+Again, click on Add Condition.
+
+Select On Overall Code option and then from the drop down select Condition Coverage
+
+Enter value 60 for is less than option and click on Add Condition.
+
+Under Projects click on All and then select devsecops-numeric-application project.
+
+************************************************************************************************
+
+10 / 13
+Set devsecops-custom-qg quality gate as the default quality gate.
+
+Sonarqube credentials:
+
+user: admin
+
+password: S0narAdm!n
+
+Login into the SonarQube UI using user admin and password S0narAdm!n. 
+Further click on the Quality Gates option.
+
+Click on the devsecops-custom-qg quality gate on the left and then click on 
+Set as Default button on the top right.
+
+************************************************************************************************
+
+11 / 13
+Build the devsecops-numeric-application Jenkins job now and once completed check the 
+quality gate status for devsecops-numeric-application project in SonarQube UI.
+
+What is the status of the quality gate now?
+
+Quality gate should fail now because you should get more than 10 code smells.
+
+************************************************************************************************
+
+12 / 13
+In last question you saw that Jenkins build passes even if SonarQube quality gate fails. 
+Make the necessary changes in SonarQube, Jenkins and the pipeline so that the pipeline waits 
+for the quality gate results and fails if it doesn't pass the quality gate conditions.
+
+Note: Do not fix any code smells as of now.
+
+-----
+
+Create SonarQube Webhook:
+
+Login into the SonarQube UI and click on the Administration on the top bar.
+
+Under Configuration click on Webhooks.
+
+Click on Create button and enter a name for the webhook, something like jenkins
+
+In the URL box enter the URL of the Jenkins server like this <jenkins-url>/sonarqube-webhook/
+
+Install Sonar Quality Gates Plugin in Jenkins:
+
+Login into the Jenkinsserver and go to the Manage Jenkins.
+
+Click on Manage Plugins then go to the Available tab.
+
+Search for Sonar Quality Gates and install the required plugin.
+
+Add SonarQube Environment and Secret in Jenkins:
+
+Login into the Jenkinsserver and go to the Manage Jenkins.
+
+Click on Manage Credentials then (global) then Add Credentials.
+
+Select Secret text in kind and enter the token you created earlier under Secret. Finally click on OK to save your changes.
+
+Now go to Configure System under Manage Jenkins.
+
+Search for SonarQube servers.
+
+Enter a name for the server like sonarqube
+
+Under Server URL enter the SonarQube server URL.
+
+Under Server authentication token select the secret you added above.
+
+Finally click on Save
+
+Modify the SonarQube stage:
+    stage('SonarQube - SAST') {
+      steps {
+        withSonarQubeEnv('sonarqube') {
+          sh "mvn sonar:sonar \
+              -Dsonar.projectKey=devsecops-numeric-application \
+              -Dsonar.host.url=<sonarqube-server-url>"
+      }
+        timeout(time: 2, unit: 'MINUTES') {
+          script {
+            waitForQualityGate abortPipeline: true
+          }
+        }
+      }
+    }
+
+Push your changes:
+
+cd kubernetes-devops-security/
+git add .
+git commit -m "<your commit message>"
+git push origin master
+
+Wait for the Jenkins job to complete before hitting the check button.
+
+************************************************************************************************
+
+13 / 13
+Go through the SonarQube quality gate status report and look for the possible reasons of the 
+quality gate failure. Try to fix those in your code so that the quality gate and the pipeline 
+passes.
+
+---
+Login to the SonarQube UI and click on the numeric under Projects on the top bar.
+
+Under Overall Code -> Code Smells you will see some duplicate and unused imported packages, remove these from your code.
+
+Open src/main/java/com/devsecops/NumericController.java in VsCode editor.
+
+As per the quality gate results for now just remove the unused imports.
+
+The file should look something like as below:
+
+package com.devsecops;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+@RestController
+public class NumericController {
+
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private static final String baseURL = "http://node-service:5000/plusone";
+
+    RestTemplate restTemplate = new RestTemplate();
+
+    @RestController
+    public class compare {
+
+        @GetMapping("/")
+        public String welcome() {
+            return "Kubernetes DevSecOps";
+        }
+
+        @GetMapping("/compare/{value}")
+        public String compareToFifty(@PathVariable int value) {
+            String message = "Could not determine comparison";
+            if (value > 50) {
+                message = "Greater than 50";
+            } else {
+                message = "Smaller than or equal to 50";
+            }
+            return message;
+        }
+
+        @GetMapping("/increment/{value}")
+        public int increment(@PathVariable int value) {
+            ResponseEntity<String> responseEntity = restTemplate.getForEntity(baseURL + '/' + value, String.class);
+            String response = responseEntity.getBody();
+            logger.info("Value Received in Request - " + value);
+            logger.info("Node Service Response - " + response);
+            return Integer.parseInt(response);
+        }
+    }
+
+}
