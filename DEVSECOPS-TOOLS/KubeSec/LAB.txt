@@ -1,0 +1,162 @@
+1 / 9
+What is kubesec?
+
+kubesec is a security risk analysis tool for Kubernetes resources.
+**********************************************************************************************
+
+2 / 9
+What is kubesec used for?
+
+A. Scanning Kubernetes pods
+B. Scanning Kubernetes deployments
+C. Scanning Kubernetes daemonsets
+D. All of the above
+
+kubesec is used for scanning all mentioned Kubernetes resources.
+
+**********************************************************************************************
+
+3 / 9
+Which of the following formats are supported by kubesec?
+
+A. XML
+B. YAML
+C. HTML
+D. JSON
+
+kubesec supports YAML and JSON formats.
+
+**********************************************************************************************
+
+5 / 9
+Install kubesec on the controlplane node and make sure you are able to run the kubesec command.
+
+You can take help from the documentation which you can access by clicking on the KubeSec 
+Docs button on the top bar.
+
+cd /root/
+wget https://github.com/controlplaneio/kubesec/releases/download/v2.14.2/kubesec_linux_amd64.tar.gz
+tar -xvf  kubesec_linux_amd64.tar.gz
+mv kubesec /usr/bin/
+
+**********************************************************************************************
+
+6 / 9
+We have a script called kubesec-scan.sh in the repository. It can be used to scan the kubernetes templates. In this script we are using kubesec v2 api to scan the k8s_deployment_service.yaml templates.
+
+Execute the script.
+
+What is the score?
+---
+Execute the script:
+
+cd kubernetes-devops-security/
+bash kubesec-scan.sh
+
+It should give you a score of 1 points.
+
+**********************************************************************************************
+
+7 / 9
+Update the kubesec-scan.sh script so that it echos messages as shown below:
+
+If the score is greater than 1 (let's say score is 4) then it should echo two messages:
+
+Score is 4
+
+Kubesec Scan Passed with a score of 4 points
+
+If the score is less than or equal to 1 (let's say score is 1) then it should echo the following two messages:
+
+Score is 1
+
+Kubernetes template scanning failed because score is less than or equal to 1
+
+Note: You need not to push your changes as of now.
+---
+Update the script as below:
+
+#!/bin/bash
+
+#kubesec-scan.sh
+
+# using kubesec v2 api
+scan_result=$(curl -sSX POST --data-binary @"k8s_deployment_service.yaml" https://v2.kubesec.io/scan)
+scan_message=$(curl -sSX POST --data-binary @"k8s_deployment_service.yaml" https://v2.kubesec.io/scan | jq .[0].message -r )
+scan_score=$(curl -sSX POST --data-binary @"k8s_deployment_service.yaml" https://v2.kubesec.io/scan | jq .[0].score)
+
+echo $scan_score
+
+if [[ "${scan_score}" -gt 1 ]]; then
+  echo "Score is $scan_score"
+  echo "Kubesec Scan $scan_message"
+else
+  echo "Score is $scan_score"
+  echo "Kubernetes template scanning failed because score is less than or equal to $scan_score"
+  exit 1;
+fi
+
+**********************************************************************************************
+
+8 / 9
+So far, you have executed the kubesec-scan.sh script manually. However, we want to run it as 
+a part of the pipeline.
+
+In Vulnerability Scan - Kubernetes pipeline stage we are running the conftest so far. 
+Update this stage and add a step to run the kubesec-scan.sh script. You can run these steps 
+in parallel since these are independent of each other. Remember to push your changes.
+
+Note:
+
+a. Make sure to build the devsecops-numeric-application job manually once.
+b. Make sure job fails at Vulnerability Scan - Kubernetes stage, if it fails at any earlier 
+stage please try to re-run the job.
+c. The build might fail but you can ignore that for now.
+
+---
+
+Modify the stage Vulnerability Scan - Kubernetes as below and push the changes:
+
+stage('Vulnerability Scan - Kubernetes') {
+      steps {
+        parallel(
+          "OPA Scan": {
+            sh '/usr/local/bin/conftest test --policy opa-k8s-security.rego k8s_deployment_service.yaml'
+          },
+          "Kubesec Scan": {
+            sh "bash kubesec-scan.sh"
+          }
+        )
+      }
+    }
+
+**********************************************************************************************
+
+9 / 9
+The pipeline is failing because the kubesec scan score is less than what is expected. 
+Now, update the k8s_deployment_service.yaml template to get the kubesec scan score more 
+than 1 so that the pipeline can pass.
+
+Take help from the kubesec documentation which you can access by clicking on the KubeSec 
+Docs button on the top bar. Use the appropriate suggestions and fix the security issues 
+in the kubernetes YAML file.
+
+The pipeline must pass this time.
+
+---
+
+Modify the spec section as below and push the changes:
+
+
+    spec:
+      serviceAccountName: default
+      containers:
+      - image: REPLACE_ME
+        name: devsecops-container
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 100
+          
+**********************************************************************************************
+
+
