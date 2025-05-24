@@ -38,7 +38,8 @@ pipeline {
                 sh "mvn sonar:sonar \
                     -Dsonar.projectKey=numeric-application \
                     -Dsonar.projectName='numeric-application' \
-                    -Dsonar.host.url=http://3.140.157.179:30012"
+                    -Dsonar.host.url=http://3.140.157.179:30012 \
+                    -Dsonar.login=sqp_0fcabfea886523b6b308aab4b909e56e3f24b617"
                     //-Dsonar.host.url=http://3.140.157.179:9000 "
                     // -Dsonar.token=sqp_f4b4ce18b985a44d5b8761b36bbea4b7fb508303"
                 // sh "mvn sonar:sonar \
