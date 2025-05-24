@@ -5,7 +5,7 @@ pipeline {
       stage('Build Artifact - MAVEN') {
             steps {
               sh "mvn clean package -DskipTests=true"
-              archive 'target/*.jar' //so that they can be downloaded later
+              // archive 'target/*.jar' //so that they can be downloaded later
             }
         }
 
@@ -13,22 +13,11 @@ pipeline {
             steps {
               sh "mvn test"
             }
-            post {
-              always {
-                junit 'target/surefire-reports/*.xml'     // JUnit
-                jacoco execPattern: 'target/jacoco.exec'  // Jacoco 
-              }
-            }
-        }
+          }
 
         stage('Mutation Tests - PIT') {
             steps {
               sh "mvn org.pitest:pitest-maven:mutationCoverage"
-            }
-            post {
-              always {
-                pitmutation mutationStatsFile: '**/target/pit-reports/**/mutations.xml'
-              }
             }
           }
 
@@ -51,9 +40,14 @@ pipeline {
                   waitForQualityGate abortPipeline: true
                 }
               }
-            }
-          }
-
+            } 
+        } 
+        stage('Vulnerability Scan - Docker') {
+            steps {
+                 	sh "mvn dependency-check:check"
+			              }
+        }
+ 
         stage('Docker Build and Push') {
             steps {
               withDockerRegistry([credentialsId: "docker-hub", url: ""]) {
@@ -71,5 +65,18 @@ pipeline {
          }
       }
     }
+     post { 
+         always { 
+          junit 'target/surefire-reports/*.xml'
+          jacoco execPattern: 'target/jacoco.exec'
+          pitmutation mutationStatsFile: '**/target/pit-reports/**/mutations.xml'
+          dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
+     //      publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, keepAll: true, reportDir: 'owasp-zap-report', reportFiles: 'zap_report.html', reportName: 'OWASP ZAP HTML Report', reportTitles: 'OWASP ZAP HTML Report'])
+        
+ 		  // //Use sendNotifications.groovy from shared library and provide current build result as parameter 
+     //      //sendNotification currentBuild.result
+         }
+     }
+   //Stages close
   }
-}
+} // PipeClose
