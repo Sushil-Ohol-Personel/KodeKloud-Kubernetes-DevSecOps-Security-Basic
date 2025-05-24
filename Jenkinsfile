@@ -8,6 +8,7 @@ pipeline {
               archive 'target/*.jar' //so that they can be downloaded later
             }
         }
+
         stage('UNIT TEST - JUNIT and JACOCO') {
             steps {
               sh "mvn test"
@@ -19,6 +20,7 @@ pipeline {
               }
             }
         }
+
         stage('Mutation Tests - PIT') {
             steps {
               sh "mvn org.pitest:pitest-maven:mutationCoverage"
@@ -29,7 +31,28 @@ pipeline {
               }
             }
           }
-         stage('Docker Build and Push') {
+          
+        stage('SonarQube - SAST') {
+            steps {
+              withSonarQubeEnv('sonarqube') {
+                sh "mvn sonar:sonar \
+                    -Dsonar.projectKey=numeric-application \
+                    -Dsonar.projectName='numeric-application' \
+                    -Dsonar.host.url=http://3.140.157.179:9000 "
+                    // -Dsonar.token=sqp_f4b4ce18b985a44d5b8761b36bbea4b7fb508303"
+                // sh "mvn sonar:sonar \
+                //         -Dsonar.projectKey=numeric-application \
+                //         -Dsonar.host.url=http://devsecops-demo.eastus.cloudapp.azure.com:9000"
+              }
+              timeout(time: 2, unit: 'MINUTES') {
+                script {
+                  waitForQualityGate abortPipeline: true
+                }
+              }
+            }
+          }
+
+        stage('Docker Build and Push') {
             steps {
               withDockerRegistry([credentialsId: "docker-hub", url: ""]) {
                 sh 'printenv'
@@ -38,7 +61,7 @@ pipeline {
                 }
             }
     } 
-         stage('K8S Deployment - DEV') {
+        stage('K8S Deployment - DEV') {
             steps {
                  withKubeConfig([credentialsId: 'kubeconfig']) {
                  sh "sed -i 's#replace#sushil1234/sushil-kodekloud-devsecops-repo:${GIT_COMMIT}#g' k8s_deployment_service.yaml"
