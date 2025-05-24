@@ -39,7 +39,11 @@ public class NumericApplicationTests {
         this.mockMvc.perform(get("/compare/50")).andDo(print()).andExpect(status().isOk())
                 .andExpect(content().string("Smaller than or equal to 50"));
     }
-
+    // @Test
+    // public void greaterThanFiftyMessage() throws Exception {
+    //     this.mockMvc.perform(get("/compare/49")).andDo(print()).andExpect(status().isOk())
+    //             .andExpect(content().string("Greater than 50"));
+    // }
     @Test
     public void greaterThanFiftyMessage() throws Exception {
         this.mockMvc.perform(get("/compare/51")).andDo(print()).andExpect(status().isOk())
@@ -49,11 +53,9 @@ public class NumericApplicationTests {
     public void welcomeMessage() throws Exception {
         this.mockMvc.perform(get("/")).andDo(print()).andExpect(status().isOk())
                 .andExpect(content().string("Kubernetes DevSecOps"));
-
+    }
     // @Test
     // public void welcomeMessage() throws Exception {
     //      this.mockMvc.perform(get("/")).andDo(print()).andExpect(status().isOk());
     // }
-    
-
 }
