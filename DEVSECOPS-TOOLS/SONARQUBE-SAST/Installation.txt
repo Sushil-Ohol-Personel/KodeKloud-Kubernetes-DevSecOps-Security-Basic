@@ -4,6 +4,8 @@ To install sonarQube we use the following command :
 
 docker run -d --name soanrqube -e SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true -p 9000:9000 sonarqube:latest
 
+docker run -d --name sonarqube -e SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true -p 9000:9000 sonarqube:9.5.0-community
+sonarqube:9.5.0-community
 To Check Logs of SonarQube Container:
 
 docker logs sonarqube -f
@@ -49,6 +51,8 @@ Click Webhooks.
 Create Webhooks.
 Add Jenkins URL here and add /sonarqube-webhook/
 eg: Jenkins:8080/sonarqube-webhook/
+
+
 
 
 
